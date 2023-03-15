@@ -6,23 +6,20 @@ import com.venky.core.util.ObjectUtil;
 import com.venky.extension.Extension;
 import com.venky.extension.Registry;
 import com.venky.swf.path.Path;
-import com.venky.swf.routing.Config;
 import in.succinct.beckn.Context;
-import in.succinct.beckn.Order;
 import in.succinct.beckn.Message;
+import in.succinct.beckn.Order;
 import in.succinct.beckn.Request;
 import in.succinct.bpp.core.adaptor.CommerceAdaptor;
+import in.succinct.bpp.core.adaptor.NetworkAdaptor;
 import ${package}.adaptor.ECommerceAdaptor;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
-import java.util.logging.Level;
 
 public class Webhook implements Extension {
     static {
@@ -31,26 +28,36 @@ public class Webhook implements Extension {
     @Override
     public void invoke(Object... objects) {
         CommerceAdaptor adaptor = (CommerceAdaptor) objects[0];
-        Path path = (Path) objects[1];
+        NetworkAdaptor networkAdaptor = (NetworkAdaptor)objects[1];
+        Path path = (Path) objects[2];
         if (!(adaptor instanceof ECommerceAdaptor)) {
             return;
         }
         ECommerceAdaptor eCommerceAdaptor = (ECommerceAdaptor) adaptor;
         try {
-            hook(eCommerceAdaptor, path);
+            hook(eCommerceAdaptor, networkAdaptor,path);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
-    public void hook(ECommerceAdaptor eCommerceAdaptor,Path path) throws Exception{
+    public void hook(ECommerceAdaptor eCommerceAdaptor, NetworkAdaptor networkAdaptor,Path path) throws Exception{
         String payload = StringUtil.read(path.getInputStream());
         //Validate auth headers from path.getHeader
-        if (ObjectUtil.equals(path.getHeader("X-WC-Webhook-Topic"),"order.updated")){
-            JSONObject eOrder = (JSONObject) JSONValue.parse(payload);
-            Order becknOrder = new Order(); //Fill all attributes here. 
+        String sign = path.getHeader("X-Hmac-SHA256");
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(new SecretKeySpec(
+                    eCommerceAdaptor.getConfiguration().get("${package}.hmac.key").getBytes(StandardCharsets.UTF_8),
+                    "HmacSHA256"));
+        byte[] hmacbytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+        if (!ObjectUtil.equals(Crypt.getInstance().toBase64(hmacbytes),sign)){
+            throw new RuntimeException("Webhook - Signature failed!!");
+        }
            
+        if (path.action().equals("order_hook")){
+            String event = path.parameter();
 
 
+            Order becknOrder = new Order();// fillRest.
             final Request request = new Request();
             request.setMessage(new Message());
             request.setContext(new Context());
@@ -60,10 +67,11 @@ public class Webhook implements Extension {
             context.setBppUri(eCommerceAdaptor.getSubscriber().getSubscriberUrl());
             context.setTimestamp(new Date());
             context.setAction("on_status");
+            context.setDomain(eCommerceAdaptor.getSubscriber().getDomain());
             //Fill any other attributes needed.
             //Send unsolicited on_status.
             context.setMessageId(UUID.randomUUID().toString());
-            eCommerceAdaptor.callback(request);
+            networkAdaptor.getApiAdaptor().callback(eCommerceAdaptor,request);
 
         }
     }
