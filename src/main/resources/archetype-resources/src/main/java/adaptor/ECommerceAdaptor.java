@@ -1,13 +1,33 @@
 package ${package}.adaptor;
 
+import com.venky.core.util.ObjectUtil;
+import com.venky.swf.db.Database;
+import com.venky.swf.integration.api.Call;
+import com.venky.swf.integration.api.HttpMethod;
+import com.venky.swf.integration.api.InputFormat;
 import com.venky.swf.plugins.beckn.messaging.Subscriber;
-import in.succinct.beckn.Items;
-import in.succinct.beckn.Locations;
+import in.succinct.beckn.BecknException;
+import in.succinct.beckn.Catalog;
+import in.succinct.beckn.Context;
+import in.succinct.beckn.Error;
+import in.succinct.beckn.FulfillmentStop;
+import in.succinct.beckn.Intent;
+import in.succinct.beckn.Message;
 import in.succinct.beckn.Order;
 import in.succinct.beckn.Request;
+import in.succinct.beckn.SellerException;
+import in.succinct.beckn.SellerException.NoDataAvailable;
 import in.succinct.bpp.core.adaptor.CommerceAdaptor;
-import in.succinct.bpp.core.db.model.BecknOrderMeta;
+import in.succinct.bpp.core.db.model.LocalOrderSynchronizerFactory;
+import in.succinct.bpp.core.db.model.User;
+import in.succinct.json.JSONAwareWrapper;
+import in.succinct.onet.core.adaptor.NetworkAdaptor.Domain;
+import in.succinct.onet.core.adaptor.NetworkAdaptor.DomainCategory;
+import in.succinct.onet.core.adaptor.NetworkAdaptorFactory;
+import org.json.simple.JSONAware;
+import org.json.simple.JSONObject;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class ECommerceAdaptor extends CommerceAdaptor {
