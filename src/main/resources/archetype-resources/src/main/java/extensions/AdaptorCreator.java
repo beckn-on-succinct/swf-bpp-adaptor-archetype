@@ -22,7 +22,7 @@ public class AdaptorCreator implements Extension {
         Map<String,String> properties = (Map<String,String>) context[0];
         Subscriber subscriber = (Subscriber) context[1];
         ObjectHolder<CommerceAdaptor> commerceAdaptorHolder = (ObjectHolder<CommerceAdaptor>) context[2];
-        if (properties.containsKey("${package}.storeUrl")){
+        if (properties.containsKey("${package}")){
            commerceAdaptorHolder.set(getAdaptor(properties,subscriber));
         }
     }

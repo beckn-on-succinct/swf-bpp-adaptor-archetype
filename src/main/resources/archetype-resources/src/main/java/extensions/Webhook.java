@@ -11,8 +11,9 @@ import in.succinct.beckn.Message;
 import in.succinct.beckn.Order;
 import in.succinct.beckn.Request;
 import in.succinct.bpp.core.adaptor.CommerceAdaptor;
-import in.succinct.bpp.core.adaptor.NetworkAdaptor;
+import in.succinct.onet.core.adaptor.NetworkAdaptor;
 import ${package}.adaptor.ECommerceAdaptor;
+import in.succinct.bpp.core.adaptor.api.NetworkApiAdaptor;
 
 
 import javax.crypto.Mac;
@@ -71,7 +72,7 @@ public class Webhook implements Extension {
             //Fill any other attributes needed.
             //Send unsolicited on_status.
             context.setMessageId(UUID.randomUUID().toString());
-            networkAdaptor.getApiAdaptor().callback(eCommerceAdaptor,request);
+            ((NetworkApiAdaptor)networkAdaptor.getApiAdaptor()).callback(eCommerceAdaptor,request);
 
         }
     }
