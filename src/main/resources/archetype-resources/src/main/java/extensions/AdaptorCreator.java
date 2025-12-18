@@ -17,7 +17,6 @@ public class AdaptorCreator implements Extension {
         Registry.instance().registerExtension(CommerceAdaptor.class.getName(),new AdaptorCreator());
     }
     @Override
-    @SuppressWarnings("unchecked")
     public void invoke(Object... context) {
         Map<String,String> properties = (Map<String,String>) context[0];
         Subscriber subscriber = (Subscriber) context[1];

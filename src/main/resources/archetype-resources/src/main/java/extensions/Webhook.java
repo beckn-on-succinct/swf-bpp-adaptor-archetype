@@ -11,10 +11,13 @@ import in.succinct.beckn.Message;
 import in.succinct.beckn.Order;
 import in.succinct.beckn.Request;
 import in.succinct.bpp.core.adaptor.CommerceAdaptor;
-import in.succinct.onet.core.adaptor.NetworkAdaptor;
-import ${package}.adaptor.ECommerceAdaptor;
 import in.succinct.bpp.core.adaptor.api.NetworkApiAdaptor;
-
+import in.succinct.bpp.core.db.model.User;
+import in.succinct.bpp.woocommerce.adaptor.ECommerceAdaptor;
+import in.succinct.bpp.woocommerce.adaptor.ECommerceSDK;
+import in.succinct.bpp.woocommerce.model.ECommerceOrder;
+import in.succinct.json.JSONAwareWrapper;
+import in.succinct.onet.core.adaptor.NetworkAdaptor;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -31,10 +34,9 @@ public class Webhook implements Extension {
         CommerceAdaptor adaptor = (CommerceAdaptor) objects[0];
         NetworkAdaptor networkAdaptor = (NetworkAdaptor)objects[1];
         Path path = (Path) objects[2];
-        if (!(adaptor instanceof ECommerceAdaptor)) {
+        if (!(adaptor instanceof ECommerceAdaptor eCommerceAdaptor)) {
             return;
         }
-        ECommerceAdaptor eCommerceAdaptor = (ECommerceAdaptor) adaptor;
         try {
             hook(eCommerceAdaptor, networkAdaptor,path);
         } catch (Exception ex) {
@@ -43,22 +45,29 @@ public class Webhook implements Extension {
     }
     public void hook(ECommerceAdaptor eCommerceAdaptor, NetworkAdaptor networkAdaptor,Path path) throws Exception{
         String payload = StringUtil.read(path.getInputStream());
+        String providerId = path.getHeader("subscriber_id");
+        User user = User.findProvider(providerId);
+        ECommerceSDK helper = eCommerceAdaptor.getHelper(user);
         //Validate auth headers from path.getHeader
-        String sign = path.getHeader("X-Hmac-SHA256");
+        
+        //Validate auth headers from path.getHeader
+        
+        String sign = path.getHeader("X-WC-WEBHOOK-SIGNATURE");
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec(
-                    eCommerceAdaptor.getConfiguration().get("${package}.hmac.key").getBytes(StandardCharsets.UTF_8),
+                helper.getWebhookSecret().getBytes(StandardCharsets.UTF_8),
                     "HmacSHA256"));
         byte[] hmacbytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
         if (!ObjectUtil.equals(Crypt.getInstance().toBase64(hmacbytes),sign)){
             throw new RuntimeException("Webhook - Signature failed!!");
         }
+        
            
         if (path.action().equals("order_hook")){
             String event = path.parameter();
+            ECommerceOrder eCommerceOrder = new ECommerceOrder(JSONAwareWrapper.parse(payload));
+            Order becknOrder = eCommerceAdaptor.convert(helper,eCommerceOrder);
 
-
-            Order becknOrder = new Order();// fillRest.
             final Request request = new Request();
             request.setMessage(new Message());
             request.setContext(new Context());
