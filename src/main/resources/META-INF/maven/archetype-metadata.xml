@@ -33,10 +33,13 @@
   </fileSets>
   <requiredProperties>
     <requiredProperty key="groupId">
-      <defaultValue>in.succint</defaultValue>
+      <defaultValue>in.succinct</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="adaptor">
+      <defaultValue>xxx</defaultValue>
     </requiredProperty>
     <requiredProperty key="artifactId">
-      <defaultValue>bpp.xxx</defaultValue>
+      <defaultValue>bpp.${adaptor}</defaultValue>
     </requiredProperty>
     <requiredProperty key="package">
       <defaultValue>${groupId}.${artifactId}</defaultValue>
