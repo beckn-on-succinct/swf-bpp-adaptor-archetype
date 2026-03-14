@@ -1,4 +1,4 @@
-package in.succinct.bpp.woocommerce.db.model;
+package ${package}.db.model;
 
 import com.venky.swf.db.annotations.column.COLUMN_DEF;
 import com.venky.swf.db.annotations.column.IS_NULLABLE;

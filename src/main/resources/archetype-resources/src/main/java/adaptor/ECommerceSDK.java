@@ -1,4 +1,4 @@
-package in.succinct.bpp.woocommerce.adaptor;
+package ${package}.adaptor;
 
 import com.venky.core.collections.IgnoreCaseMap;
 import com.venky.core.string.StringUtil;
